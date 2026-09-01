@@ -29,7 +29,10 @@ FILE_EDIT_SPEC = "edit_spec.md"            # 整理方针（人读，Surveyor �
 FILE_TERM_LOCK = "term_lock.md"            # 执行契约（机读，Editor 每块重读）
 FILE_MANIFEST = "work/manifest.json"       # 分块清单 + 进度锚 + 状态
 FILE_CLEAN = "output/整理稿.md"             # 拼接成品
-FILE_COMPARE = "review/对照稿.md"           # 原始 vs 整理稿 逐块对照
+FILE_COMPARE = "review/对照稿.md"           # 原始 vs 整理稿 逐段字级修订
+FILE_REVIEW_HTML = "review/审阅稿.html"     # Word 式审阅（浏览器）
+FILE_REVIEW_DOCX = "review/审阅稿.docx"     # Word/WPS 修订（接受/拒绝）
+FILE_FILLER = "review/语气词残留.md"        # 整理稿里疑似未清的 B 类噪音（提示，非改写）
 FILE_TODO = "review/待核对清单.md"          # 所有 ⚠ 汇总
 FILE_CONSISTENCY = "review/一致性报告.md"   # consistency_checker 产出
 
@@ -56,11 +59,46 @@ MARK_QUESTION = "【问】"        # 采访人的实质提问
 
 # ── 整理方针开关（term_lock 的 switches 段，Editor 据此调尺度）────────────────
 DEFAULT_SWITCHES = {
+    "genre": "口述史",           # 口述史 / 播客 / 通用访谈
     "fidelity": "中",            # 高 / 中 / 低 仿真度
     "interviewer": "保留",       # 保留 / 脚注 / 删除
     "dialect": "保留",           # 保留 / 标准化+原文括注
     "completion": "最小补全",    # 最小补全 / 仅标注不补
+    "fillers": "标准",           # 标准 / 加强（播客默认加强）
 }
+
+# 整理稿里疑似残留的 B 类语气词 / 口头禅（filler_scan 提示用，绝不自动删）
+FILLER_PHRASES_STANDARD = (
+    "就是说", "怎么说呢", "然后呢", "那么个情况", "你知道吧", "你懂我意思吧",
+    "对了对了", "那个那个", "就是就是",
+)
+FILLER_PHRASES_STRONG = FILLER_PHRASES_STANDARD + (
+    "反正就是", "然后就是", "所以说", "其实吧", "我觉得吧", "对吧",
+    "是吧", "你看啊", "你想啊", "咋说呢", "怎么讲",
+)
+FILLER_CHARS = ("嗯", "啊", "呃", "额", "唔")
+# 「诶/欸」在口述里常是个性口吻（诶你别说），只在加强档当填充提示
+FILLER_CHARS_STRONG = FILLER_CHARS + ("欸", "诶")
+# 口吃 / 无修辞自我重复：短片段紧挨着再说一遍
+STUTTER_RE = re.compile(
+    r"([^，。！？\s【】〔〕]{1,12})([，,、]\s*\1){1,}"
+)
+
+# 审阅对齐：【问】与【采访人】视为同一轮次
+SPEAKER_ALIASES = {
+    "问": "采访人", "Q": "采访人", "主持": "采访人", "主持人": "采访人", "主播": "采访人",
+    "答": "受访人", "A": "受访人", "嘉宾": "受访人",
+}
+
+
+def canon_speaker(name: str | None) -> str | None:
+    if not name:
+        return name
+    return SPEAKER_ALIASES.get(name, name)
+
+
+def is_oral_genre(genre: str) -> bool:
+    return "口述" in (genre or "口述史")
 
 SKILL_DIR = Path(__file__).resolve().parent.parent
 
@@ -88,6 +126,34 @@ def chunk_body(text: str) -> str:
     # 去掉注释行与首尾空白
     lines = [ln for ln in body.splitlines() if not ln.strip().startswith("<!--")]
     return "\n".join(lines).strip()
+
+
+def parse_switches(path: Path) -> dict:
+    """
+    解析 term_lock.md 开关表。识别 | 开关 | 取值 | 行。
+    键取中文名括号前的英文（如 fidelity（仿真度）→ fidelity），
+    或整格（genre / fillers）。缺省回落到 DEFAULT_SWITCHES。
+    """
+    out = dict(DEFAULT_SWITCHES)
+    if not path.exists():
+        return out
+    for ln in path.read_text(encoding="utf-8").splitlines():
+        s = ln.strip()
+        if not (s.startswith("|") and s.count("|") >= 3):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if len(cells) < 2:
+            continue
+        raw_key = cells[0]
+        val = cells[1]
+        if not raw_key or not val or raw_key in ("开关", "取值") or set(raw_key) <= set("-: "):
+            continue
+        key = re.split(r"[（(]", raw_key, maxsplit=1)[0].strip()
+        if key in out or key in DEFAULT_SWITCHES:
+            out[key] = val
+        elif raw_key in out:
+            out[raw_key] = val
+    return out
 
 
 def parse_term_lock(path: Path) -> list[dict]:

@@ -1,18 +1,19 @@
 ---
 name: oral-history-master
 description: >
-  口述史"整理稿"生成系统（Pass 1 去口语化）。将录音转写稿通过"方针师→整理者→质量门"
-  多角色协作，按口述史方法论转换为忠实、可读、可供受访人审阅签字的整理稿，并配套
-  人工复核包。专为长文（10 万字级）设计：分块 + 全局术语锚定 + 跨块一致性。
-  搭配 companion skill `oral-history-quality-guard` 做交付前忠实度审计。
-  触发词：口述史整理、转写稿去口语化、整理访谈记录、口述文本处理、oral history、
-  整理稿、"按口述史要求处理录音转文字"。书面化（Pass 2）见 workflows/pass2-bookify.md。
+  口述史 / 播客 / 通用访谈「整理稿」生成系统（Pass 1 去口语化）。将录音转写稿通过
+  「方针师→整理者→质量门」多角色协作，按存真优先原则转换为忠实、可读的整理稿，
+  并配套逐段字级审阅包（对照稿 / HTML / Word 修订）。专为长文设计：分块 + 术语锚定 +
+  跨块一致性。搭配 companion skill `oral-history-quality-guard` 做交付前忠实度审计。
+  触发词：口述史整理、播客转文字、转写稿去口语化、整理访谈记录、口述文本处理、
+  oral history、podcast transcript、整理稿、"按口述史要求处理录音转文字"。
+  书面化（Pass 2）见 workflows/pass2-bookify.md。
 ---
 
 # Oral History Master
 
 > 录音转写稿 → 忠实整理稿（Pass 1）。多角色串行流水线 + 确定性脚本 + 机读执行契约。
-> **存真 > 可读。** 录音才是史料，整理稿是对录音的最小干预转写。
+> **存真 > 可读。** 口述史里录音才是史料；播客同样禁止添写与抹平矛盾。整理稿是最小干预转写。
 
 **核心流水线**：`转写稿 → 归一(Ingest) → 建项目+专名预扫 → ⛔方针师(Surveyor) → 分块 → 整理者(Editor) → 一致性/忠实度门 → 复核包 → 质量门(QA) → 交付(签字)`
 
@@ -28,7 +29,7 @@ description: >
 > 5. **逐块 term_lock 重读（强制）** — Editor 整理**每一块前**必须 `read_file <proj>/term_lock.md`，人名/机构/专名按术语表、语气按画像、尺度按 switches。抗长文上下文压缩漂移的命门。
 > 6. **逐块串行、主 agent 亲自做** — 顺序一块一块整理，禁止分批（如"一次 5 块"），**禁止把整理丢给子 agent**（破坏跨块语境一致性）。
 > 7. **范例驱动，不堆规则** — 整理尺度向 `references/examples.md` 看齐，不要逐条套规则后漂移。
-> 8. **禁止假统计** — 不输出"删了 N 个嗯、改了 N 处"。可追溯靠 `review/对照稿.md`，不靠编数字。
+> 8. **禁止假统计** — 不输出"删了 N 个嗯、改了 N 处"。可追溯靠 `review/对照稿.md` / `审阅稿.html` / `审阅稿.docx`（字级 diff），不靠编数字。
 > 9. **禁止脚本改写文字** — 脚本只做确定性机械活（清洗/分块/校验/对照/打包）。"去口语化"判断必须由主 agent（Editor）逐块完成，不得写个脚本批量替换了事。
 > 10. **质量门必经** — 交付前必须用 companion skill `oral-history-quality-guard` 对照原文逐句审忠实度。未过门不交付。
 > 11. **只做 Pass 1** — 本 skill 只做去口语化整理稿。书面化（发表级编辑）是 Pass 2，须在**签字后的整理稿**上另起流程（`workflows/pass2-bookify.md`），**绝不混做**。
@@ -47,7 +48,8 @@ description: >
 | `${SKILL_DIR}/scripts/chunker.py` | 分块（边界切分 + 重叠 + 进度锚） |
 | `${SKILL_DIR}/scripts/consistency_checker.py` | 跨块术语 / 标签 / 标记一致性 |
 | `${SKILL_DIR}/scripts/fidelity_checker.py` | 忠实度硬门（添写 / 删过头） |
-| `${SKILL_DIR}/scripts/diff_reporter.py` | 对照稿（真·可追溯） |
+| `${SKILL_DIR}/scripts/diff_reporter.py` | 逐段字级审阅包（对照稿.md / 审阅稿.html / 审阅稿.docx） |
+| `${SKILL_DIR}/scripts/filler_scan.py` | 语气词 / 重复残留提示（不改写） |
 | `${SKILL_DIR}/scripts/package_review.py` | 拼接整理稿 + 待核对清单 |
 
 完整文档见 `${SKILL_DIR}/scripts/README.md`。
@@ -134,7 +136,8 @@ python3 ${SKILL_DIR}/scripts/fidelity_checker.py   <name>   # error → 必须�
 ### Step 6：复核包
 🚧 **GATE**：Step 5 全绿。
 ```bash
-python3 ${SKILL_DIR}/scripts/diff_reporter.py  <name>    # → review/对照稿.md
+python3 ${SKILL_DIR}/scripts/diff_reporter.py  <name>    # → review/对照稿.md + 审阅稿.html/.docx
+python3 ${SKILL_DIR}/scripts/filler_scan.py    <name>    # → review/语气词残留.md
 python3 ${SKILL_DIR}/scripts/package_review.py <name>    # → output/整理稿.md + review/待核对清单.md
 ```
 **✅ Checkpoint** — 整理稿 + 四份复核报告齐备，进入 Step 7。
@@ -143,14 +146,16 @@ python3 ${SKILL_DIR}/scripts/package_review.py <name>    # → output/整理稿.
 🚧 **GATE**：Step 6 完成。
 
 用 companion skill **`oral-history-quality-guard`** 完成忠实度审计：
-- **对照原文逐句**审 `review/对照稿.md`，确认无捏造、无伪造确定性、无圆场矛盾、无抹方言；
-- 抽查 ⚠ 是否该标尽标、术语是否全篇统一；
+- **对照原文逐段**审 `review/审阅稿.html`（或 `对照稿.md` / `审阅稿.docx`），确认无捏造、无伪造确定性、无圆场矛盾、无抹方言；
+- 抽查 ⚠ 是否该标尽标、术语是否全篇统一、`语气词残留.md` 里是否还有该清的噪音；
 - 发现问题 → 回 Editor 修对应块，重跑 Step 5–6。
 
-**未过 QA 门不得交付。** 交付时必须明确说明：已逐句审忠实度、已查捏造/确定性/矛盾/方言、已核 ⚠ 与术语一致性。
+**未过 QA 门不得交付。** 交付时必须明确说明：已逐段审忠实度、已查捏造/确定性/矛盾/方言、已核 ⚠ 与术语一致性。
 
-最终提醒用户：
-> 📌 **此整理稿（Pass 1）须经受访人审阅签字方可使用。** ⚠ 待核对处请对录音/原始材料核定后回填 term_lock 重跑一致性。书面化（Pass 2）请另起 `workflows/pass2-bookify.md`。
+最终提醒按文类：
+- 口述史：此整理稿（Pass 1）须经受访人审阅签字方可使用。
+- 播客 / 通用访谈：发布前请主持 / 嘉宾核专名与事实。
+⚠ 待核对处请对录音/原始材料核定后回填 term_lock 重跑一致性。书面化（Pass 2）请另起 `workflows/pass2-bookify.md`。
 
 ---
 

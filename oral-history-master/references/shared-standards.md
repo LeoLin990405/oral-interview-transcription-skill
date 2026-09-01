@@ -11,7 +11,8 @@
 | `【问】` | 采访人实质提问 | 仅当 `term_lock.switches.interviewer = 保留`。采访人的倾听语气（嗯/对）一律删。 |
 
 **禁止**：输出"删了 N 个嗯、改了 N 处"之类的改动统计——LLM 数不准自己的编辑，那是假可追溯。
-真正的可追溯 = `review/对照稿.md`（原始 ⟷ 整理稿逐块对照）。
+真正的可追溯 = `review/对照稿.md` / `review/审阅稿.html` / `review/审阅稿.docx`
+（原始 ⟷ 整理稿逐段字级修订；字数来自 diff，不是模型自报）。
 
 ## 2. 输入输出契约（Editor 必须遵守）
 
@@ -20,7 +21,7 @@
   - `〔以下为本块正文 · 请整理〕` 段 → 唯一要整理的内容。
 - **输出**：`work/edited/chunk_NNN.edited.md`
   - **只写整理后的正文**，不带哨兵行、不带上文回顾、不带 `<!-- -->` 注释。
-  - 保留说话人标签 `【受访人】`/`【采访人】`（若原文有）。
+  - 保留说话人标签 `【受访人】`/`【采访人】`/`【主持】`/`【嘉宾】`（若原文有，不要互改）。
   - 下游 `diff_reporter` / `fidelity_checker` / `package_review` 靠"原文正文 vs 这份输出"工作，
     多写或少写都会污染对照与字数比。
 
@@ -28,8 +29,11 @@
 
 | 产物 | 内容 |
 |---|---|
-| `output/整理稿.md` | 清洁阅读版：剥掉 `〔说明〕`，保留 `⚠`（提示未核实处），含签字提醒 |
-| `review/对照稿.md` | 原始 ⟷ 整理稿逐块对照（含全部 `〔说明〕`/`⚠`） |
+| `output/整理稿.md` | 清洁阅读版：剥掉 `〔说明〕`，保留 `⚠`；口述史含签字提醒，播客含发布前核对提醒 |
+| `review/对照稿.md` | 逐段字级修订 + 原始 / 整理全文 |
+| `review/审阅稿.html` | 浏览器 Word 式审阅（审阅 / 原文 / 整理切换） |
+| `review/审阅稿.docx` | Word / WPS 修订（可接受或拒绝） |
+| `review/语气词残留.md` | 整理稿里疑似未清的语气词 / 重复（提示，非改写） |
 | `review/待核对清单.md` | 所有 `⚠` 逐条汇总（带块号 + 上下文） |
 | `review/一致性报告.md` | 术语变体残留 / 标签 / 标记统计 |
 | `review/忠实度报告.md` | 逐块字数比，抓添写 / 删过头 |
@@ -40,7 +44,7 @@
 2. **不可伪造确定性**：把"大概/记不清"改成肯定语气 = 造假。
 3. **不可圆场矛盾**：前后矛盾保留 + `⚠`。
 4. **不可抹方言/个性**：行话、特有比喻、叙述习惯属 A 类保护。
-5. **授权与署名**：整理稿须经受访人审阅签字方可使用；`output/整理稿.md` 顶部必带此提醒。
+5. **授权与署名**：口述史整理稿须经受访人审阅签字方可使用；播客 / 通用访谈改为发布前主持 / 嘉宾核对。`output/整理稿.md` 顶部按文类带对应提醒。
 6. **录音留存**：无录音 / 原始材料对照的转写稿，关键处保留 `⚠`，并在交付说明里提示"须对录音核查"。
 7. **涉密**：本工具在本地运行，数据不出机器；涉密内容由使用者自行把关，工具不外传任何数据。
 
@@ -50,6 +54,6 @@
 project_manager.py init / import → transcript_ingest.py → glossary_extractor.py
 → 〔Surveyor: edit_spec + term_lock〕 → chunker.py
 → 〔Editor: 逐块整理〕
-→ consistency_checker.py → fidelity_checker.py → diff_reporter.py → package_review.py
+→ consistency_checker.py → fidelity_checker.py → diff_reporter.py → filler_scan.py → package_review.py
 → 〔quality-guard: 忠实度审计〕 → 交付（提醒签字）
 ```

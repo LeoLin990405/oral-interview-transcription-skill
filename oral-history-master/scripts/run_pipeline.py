@@ -23,7 +23,7 @@ HERE = Path(__file__).resolve().parent
 
 PREP = ["transcript_ingest.py", "glossary_extractor.py", "chunker.py"]
 CHECK = ["consistency_checker.py", "fidelity_checker.py", "diff_reporter.py",
-         "package_review.py", "report.py"]
+         "filler_scan.py", "package_review.py", "report.py"]
 
 
 def _run(script: str, passthrough: list[str]) -> int:

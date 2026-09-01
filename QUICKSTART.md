@@ -33,7 +33,8 @@ cd oral-interview-transcription-skill
 |---|---|
 | [`projects/demo/sources/raw.txt`](oral-history-master/projects/demo/sources/raw.txt) | 输入：带"嗯/啊/口误/方言/矛盾"的口语转写 |
 | [`projects/demo/output/整理稿.md`](oral-history-master/projects/demo/output/整理稿.md) | 输出：去口语化整理稿 |
-| [`projects/demo/review/对照稿.md`](oral-history-master/projects/demo/review/对照稿.md) | 原始 ⟷ 整理稿逐块对照（看清改了什么） |
+| [`projects/demo/review/对照稿.md`](oral-history-master/projects/demo/review/对照稿.md) | 逐段字级修订 + 原始 / 整理全文 |
+| [`projects/demo/review/审阅稿.html`](oral-history-master/projects/demo/review/审阅稿.html) | 浏览器里按 Word 审阅模式看红删绿增 |
 | [`projects/demo/review/待核对清单.md`](oral-history-master/projects/demo/review/待核对清单.md) | 所有 `⚠` 待核对点（人名/专名） |
 
 ---
@@ -50,7 +51,7 @@ cd oral-interview-transcription-skill
    oral-history-quality-guard/
    ```
 2. 对 Claude 说：**"用 oral-history-master 整理这篇转写稿"**，把转写稿给它。
-3. 它会按 7 步流水线走：清洗 → 建项目 → **方针师定方针（这一步会停下来等你确认）** → 分块 → 逐块整理 → 一致性/忠实度校验 → 出复核包 → 质量门审计 → 提醒你"受访人签字"。
+3. 它会按 7 步流水线走：清洗 → 建项目 → **方针师定方针（文类 / 仿真度 / 语气词力度，这一步会停下来等你确认）** → 分块 → 逐块整理 → 一致性/忠实度校验 → 出复核包（含逐段审阅稿） → 质量门审计 → 按文类提醒签字或发布前核对。
 
 > 关键：流程里有**一个停顿点**——方针师会把"仿真度、开关、术语表、存真红线"打包给你确认，确认后才开整。其余全自动。
 
@@ -76,7 +77,8 @@ python3 chunker.py                我的访谈                       # 分块
 
 python3 consistency_checker.py    我的访谈                       # 术语一致性
 python3 fidelity_checker.py       我的访谈                       # 忠实度门（error 必须返工）
-python3 diff_reporter.py          我的访谈                       # 生成对照稿
+python3 diff_reporter.py          我的访谈                       # 对照稿 + 审阅稿.html/.docx
+python3 filler_scan.py            我的访谈                       # 语气词残留提示
 python3 package_review.py         我的访谈                       # 拼整理稿 + 待核对清单
 
 python3 project_manager.py status 我的访谈                       # 随时看进度
@@ -105,7 +107,8 @@ python3 project_manager.py status 我的访谈                       # 随时看
 |---|---|
 | 转写稿是 Word（.docx） | `pip install python-docx`，import 时直接给 `.docx` 文件 |
 | 转写稿是带时间戳的表格（.xlsx） | `pip install openpyxl` |
-| 没识别出说话人 | 转写稿里说话人最好写成 `受访人：…` / `采访人：…` 或 `问：/答：`；没有也能跑，按段落处理 |
+| 没识别出说话人 | 转写稿里说话人最好写成 `受访人：…` / `采访人：…` / `主持：…` / `嘉宾：…` 或 `问：/答：`；没有也能跑，按段落处理 |
+| 想当播客稿用 | 方针师确认时把文类选「播客」、语气词选「加强」；审阅包一样生成，只是不再套用受访人签字句 |
 | 一致性报告报"变体未统一" | 说明某专名全篇写法不一致，回 `term_lock.md` 确认规范写法后重跑该步 |
 | 忠实度报告报 error | 偏长=可能添了原文没有的内容；偏短=可能删过头。回对应块返工 |
 

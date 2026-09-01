@@ -26,6 +26,20 @@ NOTE_RE = re.compile(r"〔[^〕]*〕")
 SENT_SPLIT = re.compile(rf"(?<=[{C.SENT_ENDINGS}])")
 
 
+def delivery_banner(genre: str, n_todo: int) -> str:
+    """整理稿页首提醒：口述史要签字，播客 / 通用访谈改发布前核对。"""
+    if C.is_oral_genre(genre):
+        return (
+            f"> ⚠ 此稿为口述史整理稿（Pass 1），含 {n_todo} 处 `⚠` 待核对，"
+            "**须经受访人审阅签字方可使用**。\n"
+            "> 书面化（Pass 2）请另起流程，见 workflows/pass2-bookify.md。\n"
+        )
+    return (
+        f"> 此稿为{genre}整理稿（Pass 1 · 去口语化），含 {n_todo} 处 `⚠` 待核对。\n"
+        "> 发布前请主持人 / 嘉宾核对专名与事实；书面化（Pass 2）见 workflows/pass2-bookify.md。\n"
+    )
+
+
 def _edited_in_order(proj: Path):
     mf = proj / C.FILE_MANIFEST
     ids = []
@@ -49,6 +63,9 @@ def main() -> int:
     if not (proj / C.PROJECT_LAYOUT["edited"]).exists():
         sys.exit(f"✗ 项目无 work/edited：{args.name}")
 
+    switches = C.parse_switches(proj / C.FILE_TERM_LOCK)
+    genre = switches.get("genre", "口述史")
+
     clean_parts, todo = [], []
     missing = 0
     for cid, text in _edited_in_order(proj):
@@ -67,10 +84,10 @@ def main() -> int:
     clean = re.sub(r"[ \t]+", " ", clean)
     out_clean = proj / C.FILE_CLEAN
     out_clean.parent.mkdir(parents=True, exist_ok=True)
+    banner = delivery_banner(genre, len(todo))
     out_clean.write_text(
         "# 整理稿（Pass 1 · 去口语化）\n\n"
-        f"> ⚠ 此稿为整理稿，含 {len(todo)} 处 `⚠` 待核对，**须经受访人审阅签字方可使用**。\n"
-        "> 书面化（Pass 2）请另起流程，见 workflows/pass2-bookify.md。\n\n"
+        + banner + "\n"
         + clean + "\n", encoding="utf-8")
 
     todo_md = ["# 待核对清单", "",
@@ -86,7 +103,7 @@ def main() -> int:
     print(f"✅ 待核对清单 → {proj / C.FILE_TODO}（{len(todo)} 处 ⚠）")
     if missing:
         print(f"⚠ 还有 {missing} 块未整理，整理稿不完整。")
-    print("   复核包还需：diff_reporter.py（对照稿）/ consistency_checker.py / fidelity_checker.py")
+    print("   复核包还需：diff_reporter.py（对照/审阅稿）/ filler_scan.py / consistency_checker.py / fidelity_checker.py")
     return 0
 
 
