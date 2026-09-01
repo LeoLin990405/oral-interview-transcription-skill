@@ -8,14 +8,35 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
       # 核心流水线零第三方依赖，无需 pip install
       - name: 语法检查 (py_compile)
         run: python -m py_compile oral-history-master/scripts/*.py oral-history-master/tests/*.py
       - name: 单元测试 (unittest)
         working-directory: oral-history-master
         run: python -m unittest discover tests -v
+      - name: demo smoke（对自带合成样例跑 check）
+        working-directory: oral-history-master/scripts
+        run: |
+          python run_pipeline.py check demo
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+          root = Path("../projects/demo/review")
+          html = (root / "审阅稿.html").read_text(encoding="utf-8")
+          md = (root / "对照稿.md").read_text(encoding="utf-8")
+          assert "<del>" in html and "<ins>" in html, "html missing redline"
+          assert "逐段字级修订" in md
+          z = zipfile.ZipFile(root / "审阅稿.docx")
+          xml = z.read("word/document.xml").decode("utf-8")
+          assert "<w:del" in xml and "<w:ins" in xml
+          print("demo smoke ok")
+          PY

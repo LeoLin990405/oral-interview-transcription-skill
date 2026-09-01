@@ -14,10 +14,12 @@
 ## 开关（switches）
 | 开关 | 取值 |
 |---|---|
+| genre（文类） | 口述史 |
 | fidelity（仿真度） | 中 |
 | interviewer（采访人话语） | 保留【问】 |
 | dialect（方言） | 保留 |
 | completion（补全力度） | 最小补全 |
+| fillers（语气词） | 标准 |
 
 ## 术语对照表（全篇唯一写法）
 > glossary_extractor 预扫 → Surveyor 结合上下文核定。**变体列里的写法在整理稿中

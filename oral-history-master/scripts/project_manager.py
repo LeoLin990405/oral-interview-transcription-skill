@@ -10,7 +10,7 @@ project_manager.py · 项目初始化 / 导入 / 校验 / 进度
     ├── term_lock.md  执行契约（机读，Editor 每块重读）
     ├── work/         chunks/ edited/ manifest.json
     ├── output/       整理稿.md
-    └── review/       对照稿.md 待核对清单.md 一致性报告.md
+    └── review/       对照稿.md 审阅稿.html/.docx 待核对清单.md 一致性报告.md
 
 用法：
     python3 project_manager.py init  <name> [--projects-root DIR]
@@ -134,7 +134,9 @@ def cmd_status(args) -> int:
     total = len(chunks)
     raw = proj / C.FILE_RAW
     raw_chars = len(raw.read_text(encoding="utf-8", errors="replace")) if raw.exists() else 0
+    sw = C.parse_switches(proj / C.FILE_TERM_LOCK)
     print(f"📋 项目：{data.get('project')}  (Pass {data.get('pass', 1)})")
+    print(f"   文类：{sw.get('genre')} · 语气词：{sw.get('fillers')}")
     print(f"   原始字数：约 {raw_chars} 字")
     print(f"   分块进度：{done}/{total} 块已整理")
     if total:
@@ -143,6 +145,10 @@ def cmd_status(args) -> int:
     for c in chunks:
         flag = {"edited": "✓", "pending": "·"}.get(c.get("status"), "?")
         print(f"     {flag} {c.get('id')}  {c.get('chars', '?')}字")
+    print("   审阅包：")
+    for rel in (C.FILE_COMPARE, C.FILE_REVIEW_HTML, C.FILE_REVIEW_DOCX, C.FILE_FILLER):
+        mark = "✓" if (proj / rel).exists() else "·"
+        print(f"     {mark} {rel}")
     return 0
 
 

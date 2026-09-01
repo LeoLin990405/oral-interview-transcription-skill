@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>审阅稿 · demo</title>
+<style>
+:root {
+  --paper: #f7f4ee;
+  --ink: #1c1917;
+  --muted: #78716c;
+  --line: #e7e0d6;
+  --del-bg: #fde8e8;
+  --del: #9f1239;
+  --ins-bg: #e3f5ea;
+  --ins: #146c2e;
+  --note: #fff7d6;
+  --note-edge: #e8d48b;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--paper); color: var(--ink);
+  font: 16px/1.75 "Songti SC", "Source Han Serif SC", "Noto Serif CJK SC",
+        "Georgia", "Times New Roman", serif;
+}
+.bar {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  padding: 10px 20px; background: #fff; border-bottom: 1px solid var(--line);
+}
+.bar h1 { font-size: 16px; margin: 0; font-weight: 600; }
+.bar .stats { color: var(--muted); font-size: 13px; }
+.bar label, .bar button {
+  font: 13px/1.2 system-ui, sans-serif; color: var(--ink);
+}
+.bar button {
+  background: #fff; border: 1px solid #d6d3d1; padding: 4px 10px; cursor: pointer;
+}
+.bar button[aria-pressed="true"] { background: #1c1917; color: #fff; border-color: #1c1917; }
+.legend { font: 12px/1.4 system-ui, sans-serif; color: var(--muted); }
+.legend del, .legend ins { font-style: normal; padding: 0 3px; }
+main { max-width: 980px; margin: 0 auto; padding: 24px 20px 80px; }
+.chunk h2 {
+  font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 6px;
+}
+.toc { font: 13px/1.6 system-ui, sans-serif; margin: 0 0 20px; }
+.toc a { color: var(--muted); margin-right: 12px; }
+.turn {
+  margin: 18px 0 28px; padding: 0 0 8px;
+  border-bottom: 1px dashed var(--line);
+}
+.turn header { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.spk { font: 600 13px/1.2 system-ui, sans-serif; }
+.meta { font: 12px/1.2 system-ui, sans-serif; color: var(--muted); }
+.row { display: grid; grid-template-columns: 1fr minmax(160px, 28%); gap: 16px; }
+.pane { min-width: 0; }
+.view { display: none; white-space: pre-wrap; }
+body.mode-review .view.review,
+body.mode-original .view.original,
+body.mode-edited .view.edited { display: block; }
+del {
+  background: var(--del-bg); color: var(--del);
+  text-decoration: line-through; text-decoration-thickness: 1.5px;
+}
+ins {
+  background: var(--ins-bg); color: var(--ins);
+  text-decoration: underline; text-underline-offset: 3px;
+  font-style: normal;
+}
+.balloon {
+  background: var(--note); border: 1px solid var(--note-edge);
+  padding: 8px 10px; font: 13px/1.55 system-ui, sans-serif;
+}
+.balloon-h { font-weight: 600; margin-bottom: 4px; }
+.balloon ul { margin: 0; padding-left: 18px; }
+.balloon .warn { color: #9a3412; }
+body.filter-changed .turn.unchanged { display: none; }
+@media print {
+  .bar { position: static; }
+  .bar button, .bar label { display: none; }
+  .row { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body class="mode-review">
+<div class="bar">
+  <h1>审阅稿 · demo</h1>
+  <span class="stats">3 块 · 8 段 · 8 段有改动 · 删 143 字 · 增 12 字</span>
+  <span>
+    <button type="button" data-mode="review" aria-pressed="true">审阅</button>
+    <button type="button" data-mode="original" aria-pressed="false">原文</button>
+    <button type="button" data-mode="edited" aria-pressed="false">整理</button>
+  </span>
+  <label for="onlyChanged"><input type="checkbox" id="onlyChanged"> 只看有改动的段</label>
+  <span class="legend"><del>删除</del> <ins>新增</ins> · 右侧黄条为批注</span>
+</div>
+<main>
+<nav class="toc"><a href="#chunk_001">chunk_001</a><a href="#chunk_002">chunk_002</a><a href="#chunk_003">chunk_003</a></nav>
+<section class="chunk"><h2 id="chunk_001">chunk_001</h2><article class="turn changed" data-changed="true"><header><span class="spk">【采访人】→【问】</span><span class="meta">段 1 · 删 17 · 增 0</span></header><div class="row"><div class="pane"><div class="view review"><del>好，那咱们就开始吧。您先讲讲，嗯，</del>您是哪一年到所里的？</div><div class="view original">好，那咱们就开始吧。您先讲讲，嗯，您是哪一年到所里的？</div><div class="view edited">您是哪一年到所里的？</div></div></div></article><article class="turn changed" data-changed="true"><header><span class="spk">【受访人】</span><span class="meta">段 2 · 删 28 · 增 0</span></header><div class="row"><div class="pane"><div class="view review"><del>嗯……我是，</del>我是一九<del>五八年，啊不对，应该是五九年吧，</del>五九年到的中科院半导体所。那时候条件特别<del>特别</del>艰苦<del>，就是说</del>，连个像样的实验室都没有。</div><div class="view original">00:01 嗯……我是，我是一九五八年，啊不对，应该是五九年吧，五九年到的中科院半导体所。那时候条件特别特别艰苦，就是说，连个像样的实验室都没有。</div><div class="view edited">〔时间 00:01〕我是一九五九年〔口误纠正：原说&quot;五八年，不对，应该是五九年&quot;，取最终值〕到的中科院半导体所。那时候条件特别艰苦，连个像样的实验室都没有。</div></div><aside class="balloon"><div class="balloon-h">批注</div><ul><li>〔时间 00:01〕</li><li>〔口误纠正：原说&quot;五八年，不对，应该是五九年&quot;，取最终值〕</li></ul></aside></div></article><article class="turn changed" data-changed="true"><header><span class="spk">【采访人】→【问】</span><span class="meta">段 3 · 删 3 · 增 0</span></header><div class="row"><div class="pane"><div class="view review"><del>嗯，那</del>您当时具体是做什么的？</div><div class="view original">嗯，那您当时具体是做什么的？</div><div class="view edited">您当时具体是做什么的？</div></div></div></article></section><section class="chunk"><h2 id="chunk_002">chunk_002</h2><article class="turn changed" data-changed="true"><header><span class="spk">【受访人】</span><span class="meta">段 1 · 删 32 · 增 0</span></header><div class="row"><div class="pane"><div class="view review"><del>那个，</del>我们<del>那个</del>课题组<del>，</del>一共<del>就七八个人，对，</del>七八个人，挤在一间屋子里<del>头</del>。<del>然后呢，</del>所里<del>就</del>让我<del>搞那个……晶体管，对，</del>搞半导体器件这一块。我们那会儿管这个叫&quot;吃皇粮&quot;，就是国家发工资<del>嘛</del>。</div><div class="view original">那个，我们那个课题组，一共就七八个人，对，七八个人，挤在一间屋子里头。然后呢，所里就让我搞那个……晶体管，对，搞半导体器件这一块。我们那会儿管这个叫“吃皇粮”，就是国家发工资嘛。</div><div class="view edited">我们课题组一共七八个人，挤在一间屋子里。所里让我搞半导体器件〔受访人先说&quot;晶体管&quot;随即改口为&quot;半导体器件&quot;，取后者〕这一块。我们那会儿管这个叫&quot;吃皇粮&quot;〔方言/行话，保留原貌〕，就是国家发工资。</div></div><aside class="balloon"><div class="balloon-h">批注</div><ul><li>〔受访人先说&quot;晶体管&quot;随即改口为&quot;半导体器件&quot;，取后者〕</li><li>〔方言/行话，保留原貌〕</li></ul></aside></div></article><article class="turn changed" data-changed="true"><header><span class="spk">【受访人】</span><span class="meta">段 2 · 删 22 · 增 6</span></header><div class="row"><div class="pane"><div class="view review">我记得是<ins>一九</ins>六二年评的工程师<del>，嗯，</del><ins>——</ins>也可能是六三年，记不太清了。后来<del>啊，</del>文革一来，什么都停了，研究也停了<del>，反正就是那么个情况</del>。<del>对了，</del>我们所<del>那个</del><ins>的</ins>郑所长，郑<del>，郑</del>振华<ins> </ins>，他对我特别照顾。</div><div class="view original">00:05 我记得是六二年评的工程师，嗯，也可能是六三年，记不太清了。后来啊，文革一来，什么都停了，研究也停了，反正就是那么个情况。对了，我们所那个郑所长，郑，郑振华，他对我特别照顾。</div><div class="view edited">〔时间 00:05〕我记得是一九六二年评的工程师——也可能是六三年，记不太清了〔保留受访人的不确定表述〕。后来文革一来，什么都停了，研究也停了。我们所的郑所长，郑振华 ⚠〔人名待核对录音/原始材料〕，他对我特别照顾。</div></div><aside class="balloon"><div class="balloon-h">批注</div><ul><li>〔时间 00:05〕</li><li>〔保留受访人的不确定表述〕</li><li>〔人名待核对录音/原始材料〕</li><li class='warn'>我们所的郑所长，郑振华 ⚠〔人名待核对录音/原始材料〕，他对我特别照顾。</li></ul></aside></div></article></section><section class="chunk"><h2 id="chunk_003">chunk_003</h2><article class="turn changed" data-changed="true"><header><span class="spk">【采访人】→【问】</span><span class="meta">段 1 · 删 6 · 增 3</span></header><div class="row"><div class="pane"><div class="view review"><del>那个八六三</del><ins>863</ins>计划<del>，</del>您参加了吗？</div><div class="view original">那个八六三计划，您参加了吗？</div><div class="view edited">863计划您参加了吗？</div></div></div></article><article class="turn changed" data-changed="true"><header><span class="spk">【受访人】</span><span class="meta">段 2 · 删 23 · 增 3</span></header><div class="row"><div class="pane"><div class="view review">那个项目<del>啊，</del>我从头到尾都没参加<del>，没参加</del>。<del>……嗯，</del>要说也参加过<del>，</del><ins>——</ins>开头那个论证会我去了一次，就一次<del>。</del><ins>，</ins>后来就没我什么事了。诶你别说，那个实验<del>，</del>失败了<del>好多次，</del>好多次。反正那段日子<del>，怎么说呢，</del>挺难的。</div><div class="view original">那个项目啊，我从头到尾都没参加，没参加。……嗯，要说也参加过，开头那个论证会我去了一次，就一次。后来就没我什么事了。诶你别说，那个实验，失败了好多次，好多次。反正那段日子，怎么说呢，挺难的。</div><div class="view edited">那个项目我从头到尾都没参加。⚠〔受访人随后改口：开头的论证会去过一次。前后表述有出入，原样保留供研究判断〕要说也参加过——开头那个论证会我去了一次，就一次，后来就没我什么事了。诶你别说，那个实验失败了好多次。反正那段日子挺难的。</div></div><aside class="balloon"><div class="balloon-h">批注</div><ul><li>〔受访人随后改口：开头的论证会去过一次。前后表述有出入，原样保留供研究判断〕</li><li class='warn'>⚠〔受访人随后改口：开头的论证会去过一次。</li></ul></aside></div></article><article class="turn changed" data-changed="true"><header><span class="spk">【采访人】</span><span class="meta">段 3 · 删 12 · 增 0</span></header><div class="row"><div class="pane"><div class="view review"><del>今天先聊到这儿，谢谢您。</del></div><div class="view original">今天先聊到这儿，谢谢您。</div><div class="view edited">（未整理）</div></div></div></article></section>
+</main>
+<script>
+const buttons = document.querySelectorAll('[data-mode]');
+buttons.forEach(btn => btn.addEventListener('click', () => {
+  document.body.classList.remove('mode-review','mode-original','mode-edited');
+  document.body.classList.add('mode-' + btn.dataset.mode);
+  buttons.forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+}));
+document.getElementById('onlyChanged').addEventListener('change', e => {
+  document.body.classList.toggle('filter-changed', e.target.checked);
+});
+</script>
+</body>
+</html>
